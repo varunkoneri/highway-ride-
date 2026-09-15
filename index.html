@@ -1,4 +1,5 @@
 Untitled document
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,6 +34,7 @@ Untitled document
     position:fixed; top:16px; right:16px; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,0.6);
     font-size:13px; text-align:right; z-index:10; user-select:none; opacity:0.8;
   }
+
   /* ---- dashboard cluster: circular speedometer + gear circle, bottom-center ---- */
   #dash {
     position:fixed; bottom:14px; left:50%; transform:translateX(-50%);
@@ -55,6 +57,7 @@ Untitled document
     cursor:pointer; user-select:none;
   }
   .gear-btn.active { background:#ffcd3c; color:#111; }
+
   /* ---- accelerator / brake pedals, bottom corners ---- */
   .pedal {
     position:fixed; bottom:26px; width:78px; height:78px; border-radius:50%;
@@ -69,6 +72,7 @@ Untitled document
     background:rgba(230,150,20,0.8);
   }
   .pedal:active, .pedal.active { transform:scale(0.93); filter:brightness(1.2); }
+
   /* ---- draggable virtual steering wheel (touch/mouse) ---- */
   #wheelWrap {
     position:fixed; left:16px; bottom:118px; width:108px; height:108px; z-index:10;
@@ -89,6 +93,7 @@ Untitled document
     position:absolute; width:24px; height:24px; border-radius:50%; background:#555;
     top:50%; left:50%; margin:-12px; border:2px solid rgba(255,255,255,0.5);
   }
+
   /* ---- on-screen action buttons, top-right, like the reference HUD icons ---- */
   #actionBtns { position:fixed; top:16px; right:16px; display:flex; gap:8px; z-index:11; }
   .hud-btn {
@@ -131,14 +136,18 @@ Untitled document
 </head>
 <body>
 <div id="canvas-container"></div>
+
 <div id="hud">
   <div class="big" id="scoreDisplay">0 m</div>
 </div>
+
 <div id="crimeHud">
   <div id="cashLine">$0</div>
   <div id="wantedLine"></div>
 </div>
+
 <div id="bustedFlash">BUSTED!</div>
+
 <div id="actionBtns">
   <div class="hud-btn" id="indLeftBtn" title="Left indicator (Q)">◀</div>
   <div class="hud-btn" id="camBtn" title="Toggle camera">📷</div>
@@ -158,9 +167,11 @@ Untitled document
 <div id="footPrompt">Press F to get in the car</div>
 <div id="bankPrompt">Press F to rob the bank</div>
 <div id="robBarWrap"><div id="robBarFill"></div></div>
+
 <div id="pedalBrake" class="pedal">BRAKE</div>
 <div id="pedalAccel" class="pedal">GAS</div>
 <div id="pedalHandbrake" class="pedal">DRIFT</div>
+
 <div id="wheelWrap">
   <div id="wheelDial">
     <div class="spoke h"></div>
@@ -168,6 +179,7 @@ Untitled document
     <div class="hub"></div>
   </div>
 </div>
+
 <div id="dash">
   <canvas id="speedGauge" width="150" height="150"></canvas>
   <div id="gearStack">
@@ -180,12 +192,15 @@ Untitled document
     <div id="gearCircle">D</div>
   </div>
 </div>
+
 <div id="crashFlash"></div>
+
 <div id="overlay">
   <h1>🏎️ Highway Rush</h1>
   <p>Weave through traffic on an endless highway. Survive as long as you can and rack up distance. Speed increases the longer you last!</p>
   <button id="startBtn">Start Driving</button>
 </div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function(){
@@ -216,18 +231,22 @@ Untitled document
   const cashLine = document.getElementById('cashLine');
   const wantedLine = document.getElementById('wantedLine');
   const bustedFlash = document.getElementById('bustedFlash');
+
   // ---------- Scene setup ----------
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(0xcfe8ff, 45, 220);
+
   const camera = new THREE.PerspectiveCamera(62, window.innerWidth/window.innerHeight, 0.1, 500);
   camera.position.set(0, 6, -10);
   camera.lookAt(0,1,10);
+
   const renderer = new THREE.WebGLRenderer({ antialias:true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   container.appendChild(renderer.domElement);
+
   // ---------- Lighting ----------
   const hemi = new THREE.HemisphereLight(0xffffff, 0x445566, 0.9);
   scene.add(hemi);
@@ -241,6 +260,7 @@ Untitled document
   sun.shadow.camera.bottom = -60;
   sun.shadow.camera.far = 200;
   scene.add(sun);
+
   // ---------- Procedural textures (no external images needed) ----------
   function makeAsphaltTexture(){
     const size = 512;
@@ -281,6 +301,7 @@ Untitled document
     tex.repeat.set(3, SEGMENT_LENGTH/5);
     return tex;
   }
+
   function makeGrassTexture(){
     const size = 256;
     const canvas = document.createElement('canvas');
@@ -299,6 +320,7 @@ Untitled document
     tex.repeat.set(10, SEGMENT_LENGTH/3);
     return tex;
   }
+
   function makeSkyTexture(){
     const canvas = document.createElement('canvas');
     canvas.width = 2; canvas.height = 256;
@@ -312,6 +334,7 @@ Untitled document
     ctx.fillRect(0,0,2,256);
     return new THREE.CanvasTexture(canvas);
   }
+
   function makeSmokeTexture(){
     const size = 64;
     const canvas = document.createElement('canvas');
@@ -326,18 +349,22 @@ Untitled document
     return new THREE.CanvasTexture(canvas);
   }
   const smokeTexture = makeSmokeTexture();
+
   // ---------- Road ----------
   const ROAD_WIDTH = 16;
   const LANE_COUNT = 4;
   const LANE_WIDTH = ROAD_WIDTH / LANE_COUNT;
   const SEGMENT_LENGTH = 40;
   const SEGMENT_COUNT = 16;
+
   scene.background = makeSkyTexture();
+
   const roadMat = new THREE.MeshStandardMaterial({ map: makeAsphaltTexture(), roughness:0.95, metalness:0.03 });
   const roadSegments = [];
   const laneMarkMat = new THREE.MeshStandardMaterial({ color:0xffe066, emissive:0x222200, roughness:0.6 });
   const grassMat = new THREE.MeshStandardMaterial({ map: makeGrassTexture(), roughness:1 });
   const waterMat = new THREE.MeshStandardMaterial({ color:0x2b6fa3, roughness:0.25, metalness:0.3 });
+
   const BRIDGE_HEIGHT = 4.5;
   const BRIDGE_RAMP_FRAC = 0.15; // fraction of the segment used for each up/down ramp; rest is flat on top
   function smoothstep(x){ return x*x*(3 - 2*x); }
@@ -351,6 +378,7 @@ Untitled document
     }
     return BRIDGE_HEIGHT;
   }
+
   // Horizontal road curves: each segment carries a baseOffset (where the road's center line
   // has drifted to by the START of this segment) and a curveAmount (how much more it drifts
   // across this segment). A smoothstep S-curve blends the two so segments join seamlessly —
@@ -360,6 +388,7 @@ Untitled document
     const t = (localZ + SEGMENT_LENGTH/2) / SEGMENT_LENGTH;
     return baseOffset + curveAmount * smoothstep(Math.min(1, Math.max(0, t)));
   }
+
   // Three-way fork: the road widens into three side-by-side lanes-worth of open road (divided
   // by median barriers) so you actually pick a path, then narrows back to one road afterward.
   const FORK_INDEX = 10, WIDE_INDEX = 11, MERGE_INDEX = 12;
@@ -406,11 +435,13 @@ Untitled document
     }
     return normalHalf;
   }
+
   const signalHeads = []; // for animating traffic light colors
   const guardrailMat = new THREE.MeshStandardMaterial({ color:0xb0b4b8, roughness:0.5, metalness:0.6 });
   const bridgeMat = new THREE.MeshStandardMaterial({ color:0x6b6f73, roughness:0.8, metalness:0.2 });
   const signBoardMat = new THREE.MeshStandardMaterial({ color:0x1f7a3d, roughness:0.6 });
   const medianMat = new THREE.MeshStandardMaterial({ color:0xd8d43c, roughness:0.6 });
+
   function addGuardrail(group, sideSign, isBridge, curveAmount, baseOffset, segIndex){
     const rail = new THREE.Group();
     const posts = [];
@@ -437,6 +468,7 @@ Untitled document
     }
     group.add(rail);
   }
+
   function addTrafficSignal(group, x, z){
     const pole = new THREE.Group();
     const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,6,8), guardrailMat);
@@ -459,6 +491,7 @@ Untitled document
     pole.position.set(x, 0, z);
     group.add(pole);
   }
+
   function addHighwaySign(group, x, z){
     const post = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,3.4,8), guardrailMat);
     post.position.set(x, 1.7, z);
@@ -469,6 +502,7 @@ Untitled document
     board.castShadow = true;
     group.add(board);
   }
+
   // splits the widened fork road into three lanes-worth of open path with painted-yellow barriers
   function addMedianDividers(group, baseOffset){
     const dividerOffset = WIDE_HALF_WIDTH / 3;
@@ -480,6 +514,7 @@ Untitled document
       group.add(barrier);
     });
   }
+
   let bankDoorObject = null; // world-space reference point for "close enough to rob" checks
   function addBank(group, x, z){
     const bank = new THREE.Group();
@@ -487,11 +522,13 @@ Untitled document
     const trimStoneMat = new THREE.MeshStandardMaterial({ color:0xcfc7ac, roughness:0.75 });
     const glassMat = new THREE.MeshStandardMaterial({ color:0x274a63, roughness:0.15, metalness:0.3, transparent:true, opacity:0.75 });
     const doorMat = new THREE.MeshStandardMaterial({ color:0x2a1c12, roughness:0.5, metalness:0.3 });
+
     const body = new THREE.Mesh(new THREE.BoxGeometry(11, 7.5, 9), stoneMat);
     body.position.y = 3.75;
     body.castShadow = true;
     body.receiveShadow = true;
     bank.add(body);
+
     // pediment (triangular roof front) — the classic bank-facade look
     const pedimentShape = new THREE.Mesh(new THREE.ConeGeometry(6.4, 2, 4), trimStoneMat);
     pedimentShape.position.set(0, 8.5, 0);
@@ -499,6 +536,7 @@ Untitled document
     pedimentShape.scale.set(1, 0.55, 0.62);
     pedimentShape.castShadow = true;
     bank.add(pedimentShape);
+
     // columns across the front
     for(let i=-2;i<=2;i++){
       const col = new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.45,6.4,12), stoneMat);
@@ -506,22 +544,26 @@ Untitled document
       col.castShadow = true;
       bank.add(col);
     }
+
     // steps
     for(let s=0;s<3;s++){
       const step = new THREE.Mesh(new THREE.BoxGeometry(9-s*0.6, 0.3, 1.4-s*0.3), trimStoneMat);
       step.position.set(0, 0.15+s*0.3, 5.2+s*0.7);
       bank.add(step);
     }
+
     // glass windows either side of the entrance
     [-3.2, 3.2].forEach(gx=>{
       const win = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 0.1), glassMat);
       win.position.set(gx, 3.4, 4.56);
       bank.add(win);
     });
+
     // entrance door — also our proximity reference point
     const door = new THREE.Mesh(new THREE.BoxGeometry(1.6, 3, 0.15), doorMat);
     door.position.set(0, 1.6, 4.58);
     bank.add(door);
+
     // "BANK" sign using a canvas texture
     const signCanvas = document.createElement('canvas');
     signCanvas.width = 256; signCanvas.height = 64;
@@ -537,11 +579,14 @@ Untitled document
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(5, 1.25), new THREE.MeshStandardMaterial({ map:signTex }));
     sign.position.set(0, 6.6, 4.62);
     bank.add(sign);
+
     bank.position.set(x, 0, z);
     group.add(bank);
+
     // record the door's live world position on this fixed segment for proximity checks
     bankDoorObject = door;
   }
+
   function addParkingLot(group, x, z){
     const lotMat = new THREE.MeshStandardMaterial({ color:0x3a3a3d, roughness:0.95 });
     const lot = new THREE.Mesh(new THREE.PlaneGeometry(16, 12), lotMat);
@@ -549,6 +594,7 @@ Untitled document
     lot.position.set(x, 0.02, z);
     lot.receiveShadow = true;
     group.add(lot);
+
     // painted stall lines — two rows of bays
     const stripeMat = new THREE.MeshStandardMaterial({ color:0xffffff });
     for(let row=-1; row<=1; row+=2){
@@ -559,6 +605,7 @@ Untitled document
         group.add(stripe);
       }
     }
+
     // a blue "P" sign at the entrance
     const signCanvas = document.createElement('canvas');
     signCanvas.width = 64; signCanvas.height = 64;
@@ -579,6 +626,7 @@ Untitled document
     sign.position.set(x - 8, 2.7, z - 6.95);
     group.add(sign);
   }
+
   function addDriftGround(group, x, z){
     const padMat = new THREE.MeshStandardMaterial({ color:0x333336, roughness:0.9, map: makeAsphaltTexture() });
     const pad = new THREE.Mesh(new THREE.CircleGeometry(18, 40), padMat);
@@ -586,6 +634,7 @@ Untitled document
     pad.position.set(x, 0.02, z);
     pad.receiveShadow = true;
     group.add(pad);
+
     // painted ring marking the drift circle
     const ring = new THREE.Mesh(new THREE.RingGeometry(13.5, 14.2, 48), new THREE.MeshStandardMaterial({ color:0xffe066, side:THREE.DoubleSide }));
     ring.rotation.x = -Math.PI/2;
@@ -595,6 +644,7 @@ Untitled document
     ringInner.rotation.x = -Math.PI/2;
     ringInner.position.set(x, 0.03, z);
     group.add(ringInner);
+
     // "DRIFT ZONE" sign
     const signCanvas = document.createElement('canvas');
     signCanvas.width = 256; signCanvas.height = 96;
@@ -615,6 +665,7 @@ Untitled document
     sign.position.set(x, 3.4, z - 18.9);
     group.add(sign);
   }
+
   const dealerCars = []; // { marker: Object3D, color: hex, price: number }
   function addDealership(group, x, z){
     const padMat = new THREE.MeshStandardMaterial({ color:0x45454a, roughness:0.9, map: makeAsphaltTexture() });
@@ -623,6 +674,7 @@ Untitled document
     pad.position.set(x, 0.02, z);
     pad.receiveShadow = true;
     group.add(pad);
+
     const options = [
       { color: 0xd7263d, name: 'Crimson', price: 2000 },
       { color: 0x1e6fd9, name: 'Cobalt', price: 3500 },
@@ -634,20 +686,25 @@ Untitled document
       showCar.rotation.y = Math.PI;
       showCar.position.set(cx, 0, z + 4);
       group.add(showCar);
+
       const marker = new THREE.Object3D();
       marker.position.set(cx, 0, z);
       group.add(marker);
+
       const disc = new THREE.Mesh(new THREE.CircleGeometry(1.4, 24), new THREE.MeshStandardMaterial({
         color:0xffd700, emissive:0xffd700, emissiveIntensity:0.8, transparent:true, opacity:0.4, side:THREE.DoubleSide
       }));
       disc.rotation.x = -Math.PI/2;
       disc.position.set(cx, 0.03, z);
       group.add(disc);
+
       const priceSign = makeYardSign(opt.name + '\n$' + opt.price.toLocaleString(), '#1a1a1a');
       priceSign.position.set(cx, 1.6, z - 2.2);
       group.add(priceSign);
+
       dealerCars.push({ marker, color: opt.color, price: opt.price });
     });
+
     const signCanvas = document.createElement('canvas');
     signCanvas.width = 256; signCanvas.height = 96;
     const sctx = signCanvas.getContext('2d');
@@ -667,6 +724,7 @@ Untitled document
     sign2.position.set(x, 3.7, z - 7.9);
     group.add(sign2);
   }
+
   // ---------- House interior (a real room you can walk into, tucked far from the main loop) ----------
   const INTERIOR_ORIGIN = new THREE.Vector3(0, 0, 3000); // way outside the road loop's coordinate range
   let interiorExitPoint = null; // world-space Object3D marking where "walk here to exit" is
@@ -677,15 +735,18 @@ Untitled document
     const floorMat = new THREE.MeshStandardMaterial({ color:0xb08a5c, roughness:0.8 });
     const wallMat = new THREE.MeshStandardMaterial({ color:0xe8e0d0, roughness:0.9 });
     const trimMat = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.6 });
+
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(13, 11), floorMat);
     floor.rotation.x = -Math.PI/2;
     floor.receiveShadow = true;
     room.add(floor);
+
     // rug under the coffee table
     const rug = new THREE.Mesh(new THREE.CircleGeometry(2, 24), new THREE.MeshStandardMaterial({color:0x8a3b3b, roughness:0.9}));
     rug.rotation.x = -Math.PI/2;
     rug.position.set(-1, 0.01, 0);
     room.add(rug);
+
     // walls (three sides, front stays open where the "door"/exit is)
     const wallH = 3.6;
     const backWall = new THREE.Mesh(new THREE.BoxGeometry(13, wallH, 0.2), wallMat);
@@ -701,12 +762,14 @@ Untitled document
     ceiling.rotation.x = Math.PI/2;
     ceiling.position.y = wallH;
     room.add(ceiling);
+
     // baseboards for a finished look
     [[0,-5.5,13,0.2],[-6.5,0,0.2,11],[6.5,0,0.2,11]].forEach(([x,z,w,d])=>{
       const base = new THREE.Mesh(new THREE.BoxGeometry(w,0.25,d), trimMat);
       base.position.set(x, 0.12, z);
       room.add(base);
     });
+
     // sofa (an L-shaped seat made of a few boxes) facing the TV
     const sofaMat = new THREE.MeshStandardMaterial({ color:0x3b5c8a, roughness:0.75 });
     const sofaBase = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.6, 1.2), sofaMat);
@@ -726,6 +789,7 @@ Untitled document
       cushion.position.set(cx, 0.68, 2.3);
       room.add(cushion);
     });
+
     // coffee table
     const tableTop = new THREE.Mesh(new THREE.BoxGeometry(1.6,0.1,0.9), new THREE.MeshStandardMaterial({color:0x5a3d24}));
     tableTop.position.set(-1, 0.5, 0.8);
@@ -736,6 +800,7 @@ Untitled document
       leg.position.set(lx, 0.25, lz);
       room.add(leg);
     });
+
     // TV stand + TV facing the sofa
     const stand = new THREE.Mesh(new THREE.BoxGeometry(2.2,0.5,0.5), new THREE.MeshStandardMaterial({color:0x2a2a2a}));
     stand.position.set(-1, 0.25, -3.5);
@@ -746,6 +811,7 @@ Untitled document
     const tvScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.65,0.85), new THREE.MeshStandardMaterial({color:0x1a3a5a, emissive:0x14324f, emissiveIntensity:0.4}));
     tvScreen.position.set(-1, 1.1, -3.55);
     room.add(tvScreen);
+
     // small kitchenette counter along the right wall
     const counter = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.9, 3), new THREE.MeshStandardMaterial({color:0xd8d3c4}));
     counter.position.set(3.9, 0.45, 1);
@@ -757,6 +823,7 @@ Untitled document
     fridge.position.set(3.9, 0.9, -1.2);
     fridge.castShadow = true;
     room.add(fridge);
+
     // dining table with two chairs
     const dTable = new THREE.Mesh(new THREE.CylinderGeometry(0.7,0.7,0.55,16), new THREE.MeshStandardMaterial({color:0x6b4a2c}));
     dTable.position.set(2.4, 0.42, 2.8);
@@ -766,6 +833,7 @@ Untitled document
       chair.position.set(cx, 0.45, cz);
       room.add(chair);
     });
+
     // a warm ceiling light
     const lamp = new THREE.PointLight(0xfff2d0, 0.9, 12);
     lamp.position.set(0, 2.8, 0);
@@ -773,10 +841,12 @@ Untitled document
     const lampFixture = new THREE.Mesh(new THREE.SphereGeometry(0.2,10,10), new THREE.MeshStandardMaterial({color:0xfff6dd, emissive:0xfff2c0, emissiveIntensity:0.8}));
     lampFixture.position.set(0, 2.9, 0);
     room.add(lampFixture);
+
     // where the player actually sits — facing the TV
     sofaSitPoint = new THREE.Object3D();
     sofaSitPoint.position.set(-1, 0, 1.75);
     room.add(sofaSitPoint);
+
     // a wardrobe for changing clothes
     const wardrobeMat = new THREE.MeshStandardMaterial({ color:0x6b4a30, roughness:0.7 });
     const wardrobe = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.2, 0.7), wardrobeMat);
@@ -789,6 +859,7 @@ Untitled document
     wardrobePoint = new THREE.Object3D();
     wardrobePoint.position.set(-5.0, 0, -4.2);
     room.add(wardrobePoint);
+
     // the exit — an open doorway at the front, marked so the player knows where to walk
     const exitMarker = new THREE.Object3D();
     exitMarker.position.set(0, 0, 5.0);
@@ -797,11 +868,13 @@ Untitled document
     const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(1.6, wallH, 0.2), trimMat);
     doorFrame.position.set(0, wallH/2, 5.3);
     room.add(doorFrame);
+
     room.position.copy(INTERIOR_ORIGIN);
     scene.add(room);
     return room;
   }
   buildHouseInterior();
+
   const houses = []; // { door: Object3D, lastLootedAt: number }
   const houseColors = [0xd9a05b, 0xc7d1d9, 0xb85c4a, 0xe0c98a];
   function addHouse(group, x, z, colorIdx){
@@ -813,18 +886,21 @@ Untitled document
     const winMat = new THREE.MeshStandardMaterial({ color:0x9fd3f0, roughness:0.2, metalness:0.2, transparent:true, opacity:0.8 });
     const trimMat = new THREE.MeshStandardMaterial({ color:0xf2f2ee, roughness:0.7 });
     const brickMat = new THREE.MeshStandardMaterial({ color:0x8a4b3a, roughness:0.9 });
+
     // single-story body — a real house footprint, not an apartment block
     const body = new THREE.Mesh(new THREE.BoxGeometry(6, 3.2, 5.5), wallMat);
     body.position.y = 1.6;
     body.castShadow = true;
     body.receiveShadow = true;
     house.add(body);
+
     const roof = new THREE.Mesh(new THREE.ConeGeometry(4.6, 2.2, 4), roofMat);
     roof.position.set(0, 4.3, 0);
     roof.rotation.y = Math.PI/4;
     roof.scale.set(1, 0.65, 0.82);
     roof.castShadow = true;
     house.add(roof);
+
     // a proper front porch with its own little roof over the door
     const porchFloor = new THREE.Mesh(new THREE.BoxGeometry(3, 0.15, 1.6), trimMat);
     porchFloor.position.set(-0.6, 0.18, 3.4);
@@ -838,20 +914,24 @@ Untitled document
     porchRoof.position.set(-0.6, 2.45, 3.4);
     porchRoof.castShadow = true;
     house.add(porchRoof);
+
     // chimney, for a real single-family-home silhouette
     const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.6,1.8,0.6), brickMat);
     chimney.position.set(1.8, 4.6, -1.2);
     chimney.castShadow = true;
     house.add(chimney);
+
     const door = new THREE.Mesh(new THREE.BoxGeometry(1.1, 2.1, 0.12), doorMat);
     door.position.set(-0.6, 1.05, 3.5);
     house.add(door);
+
     const win = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 0.1), winMat);
     win.position.set(1.6, 1.9, 2.78);
     house.add(win);
     const win2 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.0, 0.1), winMat);
     win2.position.set(-2.6, 1.9, 2.78);
     house.add(win2);
+
     // mailbox for a bit of extra roadside detail
     const mailPost = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,1,6), new THREE.MeshStandardMaterial({color:0x444444}));
     mailPost.position.set(2.6, 0.5, 4.6);
@@ -859,12 +939,14 @@ Untitled document
     const mailBox = new THREE.Mesh(new THREE.BoxGeometry(0.4,0.3,0.5), new THREE.MeshStandardMaterial({color:0xcc3333}));
     mailBox.position.set(2.6, 1.05, 4.6);
     house.add(mailBox);
+
     let signMesh = null;
     let marker = null;
     if(forSale){
       signMesh = makeYardSign('FOR SALE\n$3,000', '#1f7a3d');
       signMesh.position.set(2.6, 1.1, 4.0);
       house.add(signMesh);
+
       // glowing green "walk in to buy" marker, GTA-pickup style
       marker = new THREE.Group();
       const disc = new THREE.Mesh(new THREE.CircleGeometry(1.1, 24), new THREE.MeshStandardMaterial({
@@ -886,11 +968,14 @@ Untitled document
       marker.position.set(-0.6, 0, 5.2);
       house.add(marker);
     }
+
     house.scale.set(1.5, 1.5, 1.5);
     house.position.set(x, 0, z);
     group.add(house);
+
     houses.push({ door, lastLootedAt: -999, forSale, owned: false, sign: signMesh, marker, price: 3000, houseGroup: house });
   }
+
   function makeYardSign(text, bgColor){
     const canvas = document.createElement('canvas');
     canvas.width = 128; canvas.height = 80;
@@ -912,6 +997,7 @@ Untitled document
     group.add(board);
     return group;
   }
+
   // ---------- City block: buildings, sidewalks, parked cars, pedestrians ----------
   function makeWindowTexture(baseColor){
     const size = 128;
@@ -934,6 +1020,7 @@ Untitled document
     return tex;
   }
   const buildingPalette = ['#8a8f96', '#a9795a', '#7c8a99', '#9c8f78', '#6f7a6f'];
+
   function addCityBuilding(group, x, z, width, depth, height){
     const tex = makeWindowTexture(buildingPalette[Math.floor(Math.random()*buildingPalette.length)]);
     tex.repeat.set(Math.max(1, Math.round(width/3)), Math.max(1, Math.round(height/3)));
@@ -948,6 +1035,7 @@ Untitled document
     roofCap.position.set(x + width*0.15, height+0.3, z);
     group.add(roofCap);
   }
+
   function addSidewalk(group, sideSign, curbBaseX){
     const walkMat = new THREE.MeshStandardMaterial({ color:0xb9b6ad, roughness:0.95 });
     const curbMat = new THREE.MeshStandardMaterial({ color:0x9a9890, roughness:0.9 });
@@ -961,12 +1049,14 @@ Untitled document
     curb.position.set(curbBaseX, 0.09, 0);
     group.add(curb);
   }
+
   function addParkedCar(group, x, z, color){
     const car = buildCar(color, false);
     car.rotation.y = Math.PI/2 * (Math.random()<0.5?1:-1);
     car.position.set(x, 0, z);
     group.add(car);
   }
+
   const pedestrians = []; // { obj, baseX, baseZ, range, phase, speed, limbs }
   function addPedestrian(group, baseX, baseZ){
     const ped = buildCharacter();
@@ -982,11 +1072,13 @@ Untitled document
       walkPhase: Math.random()*10
     });
   }
+
   function addCityBlock(group, baseOffset){
     const sidewalkOffsetL = -ROAD_WIDTH/2 - 1.4 + baseOffset;
     const sidewalkOffsetR = ROAD_WIDTH/2 + 1.4 + baseOffset;
     addSidewalk(group, -1, sidewalkOffsetL);
     addSidewalk(group, 1, sidewalkOffsetR);
+
     // a full, continuous row of buildings behind each sidewalk — a real city wall, not scattered towers
     const slots = 5;
     const slotWidth = SEGMENT_LENGTH / slots;
@@ -998,16 +1090,20 @@ Untitled document
       addCityBuilding(group, sidewalkOffsetL - 3.6 - w/2 - Math.random()*1.5, z, w, 7+Math.random()*3, hL);
       addCityBuilding(group, sidewalkOffsetR + 3.6 + w/2 + Math.random()*1.5, z, w, 7+Math.random()*3, hR);
     }
+
     // a couple of parked cars along the curb
     const parkColors = [0x2a9df4, 0xdddddd, 0x8e44ad, 0xee6c4d];
     addParkedCar(group, -ROAD_WIDTH/2 - 0.8 + baseOffset, -8, parkColors[Math.floor(Math.random()*parkColors.length)]);
     addParkedCar(group, ROAD_WIDTH/2 + 0.8 + baseOffset, 6, parkColors[Math.floor(Math.random()*parkColors.length)]);
+
     // pedestrians strolling the sidewalk
     addPedestrian(group, sidewalkOffsetL, -4);
     addPedestrian(group, sidewalkOffsetR, 2);
   }
+
   function addRiverBridge(group, baseOffset){
     const waterLevel = -4.4;
+
     // support pillars from the water up to the underside of the curved deck
     [-SEGMENT_LENGTH/2+6, 0, SEGMENT_LENGTH/2-6].forEach(pz=>{
       const deckY = bridgeYAt(pz) - 0.3;
@@ -1019,6 +1115,7 @@ Untitled document
         group.add(pillar);
       });
     });
+
     // overhead steel truss arches you drive under while staying on the bridge deck
     [-SEGMENT_LENGTH/2+7, SEGMENT_LENGTH/2-7].forEach(z=>{
       const deckY = bridgeYAt(z);
@@ -1045,12 +1142,16 @@ Untitled document
       truss.position.set(baseOffset, deckY, z);
       group.add(truss);
     });
+
     // bridge nameplate sign at entry
     addHighwaySign(group, -ROAD_WIDTH/2 - 3 + baseOffset, -SEGMENT_LENGTH/2 + 3);
   }
+
   function createSegment(zPos, segIndex, curveAmount, baseOffset){
     const group = new THREE.Group();
+
     const isBridge = segIndex === 6; // just one bridge in the whole loop — long flat stretches between them
+
     // road surface: subdivided along its length so it can bend (curve) and hump (bridge) smoothly
     const road = new THREE.Mesh(
       new THREE.PlaneGeometry(ROAD_WIDTH, SEGMENT_LENGTH, 1, 24),
@@ -1071,6 +1172,7 @@ Untitled document
     road.rotation.x = -Math.PI/2;
     road.receiveShadow = true;
     group.add(road);
+
     // guardrails along both edges — follow the curve/bridge/fork-width automatically now
     // (skipped in the city block, where the sidewalk curb does that job instead)
     const isCityBlock = segIndex === CITY_INDEX_1 || segIndex === CITY_INDEX_2;
@@ -1078,11 +1180,14 @@ Untitled document
       addGuardrail(group, -1, isBridge, curveAmount, baseOffset, segIndex);
       addGuardrail(group, 1, isBridge, curveAmount, baseOffset, segIndex);
     }
+
     // the wide fork segment gets median dividers splitting it into three choosable paths
     if(segIndex === WIDE_INDEX){
       addMedianDividers(group, baseOffset);
     }
+
     const isForkZone = segIndex === FORK_INDEX || segIndex === WIDE_INDEX || segIndex === MERGE_INDEX;
+
     // periodic river bridge / traffic signal / highway sign
     if(isBridge){
       addRiverBridge(group, baseOffset);
@@ -1097,33 +1202,40 @@ Untitled document
       const z = -SEGMENT_LENGTH/2 + 6;
       addHighwaySign(group, ROAD_WIDTH/2 + 3 + curveXAt(baseOffset, curveAmount, z), z);
     }
+
     // a sign at the fork entrance flagging the three-way split ahead
     if(segIndex === FORK_INDEX){
       addHighwaySign(group, -roadHalfWidthAt(segIndex, -SEGMENT_LENGTH/2) - 3 + baseOffset, -SEGMENT_LENGTH/2 + 2);
     }
+
     // the bank sits just off the road on this dedicated segment
     if(segIndex === BANK_INDEX){
       addBank(group, ROAD_WIDTH/2 + 10 + baseOffset, 7);
       addParkingLot(group, ROAD_WIDTH/2 + 10 + baseOffset, -6);
     }
+
     // an open drift pad, off to the side of its own dedicated segment
     if(segIndex === DRIFT_INDEX){
       addDriftGround(group, ROAD_WIDTH/2 + 20 + baseOffset, 0);
     }
+
     // car dealership on the starting segment
     if(segIndex === DEALER_INDEX){
       addDealership(group, ROAD_WIDTH/2 + 12 + baseOffset, 0);
     }
+
     // downtown stretch: sidewalks, buildings, parked cars, and pedestrians
     if(isCityBlock){
       addCityBlock(group, baseOffset);
     }
+
     // a few roadside houses, opposite side from the bank, for the burglary mechanic
     const HOUSE_SEGMENTS = [1, 4, 7];
     const houseSegIdx = HOUSE_SEGMENTS.indexOf(segIndex);
     if(houseSegIdx !== -1){
       addHouse(group, -(ROAD_WIDTH/2 + 9) + baseOffset, -6, houseSegIdx);
     }
+
     // grass either side (water instead, when this segment is a bridge) — left flat/straight
     // since it's just background filler; use the widest point in fork-zone segments so grass
     // never overlaps the widened road surface
@@ -1140,6 +1252,7 @@ Untitled document
     const grassR = grassL.clone();
     grassR.position.x = grassHalfWidth+20 + baseOffset;
     group.add(grassR);
+
     // lane markings (dashed) for internal lanes — skipped in the fork zone, where the median
     // dividers do the job of splitting the road into paths instead
     if(!isForkZone){
@@ -1166,6 +1279,7 @@ Untitled document
       }
     });
     }
+
     // occasional roadside props: trees / lamp posts (skip over water and the fork zone)
     if(!isBridge && !isForkZone && segIndex !== BANK_INDEX && segIndex !== DRIFT_INDEX && segIndex !== DEALER_INDEX && houseSegIdx === -1 && !isCityBlock){
     for(let i=0;i<3;i++){
@@ -1197,6 +1311,7 @@ Untitled document
       }
     }
     }
+
     group.position.z = zPos;
     group.userData.isBridge = isBridge;
     group.userData.curveAmount = curveAmount;
@@ -1205,6 +1320,7 @@ Untitled document
     scene.add(group);
     return group;
   }
+
   // Curve pattern across the 12-segment loop: a gentle right-hand S-curve, a long flat/straight
   // stretch (with the bridge in it), then a gentle left-hand curve back — net zero drift so the
   // loop closes seamlessly when it wraps back to segment 0.
@@ -1217,9 +1333,11 @@ Untitled document
       running += CURVE_PATTERN[i] || 0;
     }
   }
+
   for(let i=0;i<SEGMENT_COUNT;i++){
     roadSegments.push(createSegment(i*SEGMENT_LENGTH, i, CURVE_PATTERN[i] || 0, segmentBaseOffsets[i]));
   }
+
   // sample the road's height (flat, or the bridge hump) at any given world Z — shared by
   // the car, traffic, and the on-foot character so everyone follows the same terrain.
   function getHeightAt(worldZ){
@@ -1231,6 +1349,7 @@ Untitled document
     }
     return 0;
   }
+
   // sample where the road's center line currently sits in world X at a given world Z —
   // the car has to actually steer to follow this as it changes through a curve.
   function getRoadCenterXAt(worldZ){
@@ -1242,6 +1361,7 @@ Untitled document
     }
     return 0;
   }
+
   // sample the road's current half-width at a given world Z — wide through the three-way fork,
   // normal everywhere else — so the guardrail boundary widens there instead of falsely blocking you
   function getRoadHalfWidthAt(worldZ){
@@ -1253,9 +1373,11 @@ Untitled document
     }
     return ROAD_WIDTH/2;
   }
+
   // ---------- Player Car ----------
   function buildCar(bodyColor, isPlayer){
     const car = new THREE.Group();
+
     const bodyMat = new THREE.MeshPhysicalMaterial({ color: bodyColor, roughness:0.25, metalness:0.55, clearcoat:1, clearcoatRoughness:0.12 });
     const glassMat = new THREE.MeshStandardMaterial({ color:0x151c26, roughness:0.08, metalness:0.3, transparent:true, opacity:0.82 });
     const trimMat = new THREE.MeshStandardMaterial({ color:0x161616, roughness:0.55, metalness:0.4 });
@@ -1264,17 +1386,20 @@ Untitled document
     const lightMat = new THREE.MeshStandardMaterial({ color:0xffffff, emissive:0xffffff, emissiveIntensity:0.9 });
     const tailMat = new THREE.MeshStandardMaterial({ color:0xff2222, emissive:0xff0000, emissiveIntensity:0.8 });
     const indicatorMat = new THREE.MeshStandardMaterial({ color:0xffa528, emissive:0xff9500, emissiveIntensity:0.6 });
+
     // main chassis, slightly narrower at the bottom for a lower, sportier stance
     const lowerBody = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.55, 4.3), bodyMat);
     lowerBody.position.y = 0.55;
     lowerBody.castShadow = true;
     car.add(lowerBody);
+
     // side skirts (dark trim strip along the bottom edge)
     [-1, 1].forEach(side=>{
       const skirt = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 3.6), trimMat);
       skirt.position.set(side*0.98, 0.32, 0);
       car.add(skirt);
     });
+
     // front & rear bumpers
     const frontBumper = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.42, 0.4), trimMat);
     frontBumper.position.set(0, 0.42, 2.15);
@@ -1283,49 +1408,59 @@ Untitled document
     const rearBumper = frontBumper.clone();
     rearBumper.position.z = -2.15;
     car.add(rearBumper);
+
     // front splitter (a low blade under the bumper — aggressive, performance-coupe look)
     const splitter = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.06, 0.5), trimMat);
     splitter.position.set(0, 0.18, 2.28);
     car.add(splitter);
+
     // twin kidney-style grille
     [-0.32, 0.32].forEach(gx=>{
       const grille = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.26, 0.06), trimMat);
       grille.position.set(gx, 0.52, 2.32);
       car.add(grille);
     });
+
     // cabin with raked windshield & rear glass instead of a plain box
     const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.5, 1.9), glassMat);
     cabin.position.set(0, 1.08, -0.25);
     cabin.castShadow = true;
     car.add(cabin);
+
     // contrasting roof (matte, sets off the paint — classic two-tone performance look)
     const roof = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 1.7), trimMat);
     roof.position.set(0, 1.36, -0.25);
     roof.castShadow = true;
     car.add(roof);
+
     const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.44, 0.55, 0.12), glassMat);
     windshield.position.set(0, 1.02, 0.78);
     windshield.rotation.x = -0.55;
     car.add(windshield);
+
     const rearGlass = new THREE.Mesh(new THREE.BoxGeometry(1.44, 0.5, 0.12), glassMat);
     rearGlass.position.set(0, 0.98, -1.28);
     rearGlass.rotation.x = 0.5;
     car.add(rearGlass);
+
     // hood and trunk deck
     const hood = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.3, 1.35), bodyMat);
     hood.position.set(0, 0.85, 1.62);
     hood.castShadow = true;
     car.add(hood);
+
     const trunk = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.28, 0.9), bodyMat);
     trunk.position.set(0, 0.85, -1.75);
     trunk.castShadow = true;
     car.add(trunk);
+
     // side mirrors
     [-1, 1].forEach(side=>{
       const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 0.3), bodyMat);
       mirror.position.set(side*0.98, 1.0, 0.75);
       car.add(mirror);
     });
+
     // rear spoiler
     const spoilerDeck = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.06, 0.35), trimMat);
     spoilerDeck.position.set(0, 1.28, -1.95);
@@ -1335,6 +1470,7 @@ Untitled document
       strut.position.set(sx, 1.12, -1.95);
       car.add(strut);
     });
+
     // wheels: each sits on a steering pivot (turns for front wheels) with an inner
     // spin group (rolls as the car moves) so the wheel geometry animates realistically.
     // Tire + inset chrome rim + a few spokes for an alloy-wheel look.
@@ -1353,24 +1489,30 @@ Untitled document
       pivot.position.set(d.x, 0.42, d.z);
       const spin = new THREE.Object3D();
       pivot.add(spin);
+
       const tire = new THREE.Mesh(tireGeo, tireMat);
       tire.rotation.z = Math.PI/2;
       tire.castShadow = true;
       spin.add(tire);
+
       const rim = new THREE.Mesh(rimGeo, chromeMat);
       rim.rotation.z = Math.PI/2;
       spin.add(rim);
+
       const hub = new THREE.Mesh(hubGeo, chromeMat);
       hub.rotation.z = Math.PI/2;
       spin.add(hub);
+
       // a few spokes so the alloy wheel doesn't read as a flat disc
       for(let s=0; s<5; s++){
         const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.05, 0.05), chromeMat);
         spoke.rotation.x = (s/5)*Math.PI*2;
         spin.add(spoke);
       }
+
       car.add(pivot);
       wheelPivots.push({ pivot, spin, front: d.front });
+
       // flared wheel-arch trim (a dark lip around the opening, widens the visual stance)
       const arch = new THREE.Mesh(
         new THREE.TorusGeometry(0.5, 0.07, 8, 16, Math.PI),
@@ -1383,11 +1525,13 @@ Untitled document
     });
     car.userData.wheelPivots = wheelPivots;
     car.userData.bodyMat = bodyMat;
+
     // headlights / taillights / turn indicators — stored on userData so the game loop can drive them
     const hl1 = new THREE.Mesh(new THREE.BoxGeometry(0.24,0.17,0.05), lightMat.clone());
     hl1.position.set(-0.68, 0.65, 2.16);
     const hl2 = hl1.clone(); hl2.material = lightMat.clone(); hl2.position.x = 0.68;
     car.add(hl1, hl2);
+
     const ind1 = new THREE.Mesh(new THREE.BoxGeometry(0.12,0.12,0.05), indicatorMat.clone());
     ind1.position.set(-0.92, 0.6, 2.1);
     const ind2 = ind1.clone(); ind2.material = indicatorMat.clone(); ind2.position.x = 0.92;
@@ -1397,16 +1541,19 @@ Untitled document
     indR1.position.set(-0.95, 0.65, -2.18);
     const indR2 = indR1.clone(); indR2.material = indicatorMat.clone(); indR2.position.x = 0.95;
     car.add(indR1, indR2);
+
     const tl1 = new THREE.Mesh(new THREE.BoxGeometry(0.26,0.2,0.05), tailMat.clone());
     tl1.position.set(-0.78, 0.65, -2.16);
     const tl2 = tl1.clone(); tl2.material = tailMat.clone(); tl2.position.x = 0.78;
     car.add(tl1, tl2);
+
     // small reverse lights (separate from the brake/tail lights, light up white in reverse)
     const reverseLightMat = new THREE.MeshStandardMaterial({ color:0x666666, emissive:0x000000, emissiveIntensity:0 });
     const rl1 = new THREE.Mesh(new THREE.BoxGeometry(0.14,0.12,0.05), reverseLightMat.clone());
     rl1.position.set(-0.55, 0.65, -2.16);
     const rl2 = rl1.clone(); rl2.material = reverseLightMat.clone(); rl2.position.x = 0.55;
     car.add(rl1, rl2);
+
     // license plates front & rear
     const plateMat = new THREE.MeshStandardMaterial({ color:0xf2f2f0, roughness:0.5 });
     const plateF = new THREE.Mesh(new THREE.BoxGeometry(0.55,0.16,0.02), plateMat);
@@ -1415,6 +1562,7 @@ Untitled document
     const plateR = plateF.clone();
     plateR.position.z = -2.36;
     car.add(plateR);
+
     // quad exhaust pipes
     [-0.62, -0.42, 0.42, 0.62].forEach(ex=>{
       const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.07,0.26,10), chromeMat);
@@ -1422,6 +1570,7 @@ Untitled document
       pipe.position.set(ex, 0.26, -2.25);
       car.add(pipe);
     });
+
     // windshield wipers
     [-0.35, 0.35].forEach(wx=>{
       const wiper = new THREE.Mesh(new THREE.BoxGeometry(0.04,0.35,0.04), trimMat);
@@ -1429,10 +1578,12 @@ Untitled document
       wiper.rotation.z = 0.3;
       car.add(wiper);
     });
+
     // tinted sunroof panel
     const sunroof = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.03,0.9), glassMat);
     sunroof.position.set(0, 1.42, -0.35);
     car.add(sunroof);
+
     // the player gets real light-casting headlamps for actual illumination at night/tunnels
     car.userData.headlightMeshes = [hl1, hl2];
     car.userData.tailMeshes = [tl1, tl2];
@@ -1458,12 +1609,15 @@ Untitled document
       car.add(spotR);
       car.userData.headSpotlights = [spotL, spotR];
     }
+
     car.castShadow = true;
     return car;
   }
+
   const player = buildCar(0xf2f3f5, true);
   player.position.set(0, 0, 0);
   scene.add(player);
+
   // ---------- Police car (chases you once wanted) ----------
   function buildPoliceCar(){
     const car = buildCar(0x111318, false);
@@ -1482,6 +1636,7 @@ Untitled document
     car.userData.speed = 0;
     return car;
   }
+
   function spawnPolice(count){
     for(let i=0;i<count;i++){
       const car = buildPoliceCar();
@@ -1496,6 +1651,7 @@ Untitled document
     police.forEach(p=>scene.remove(p));
     police.length = 0;
   }
+
   // ---------- Player character (for stepping out of the car, GTA-style) ----------
   function buildCharacter(){
     const char = new THREE.Group();
@@ -1504,20 +1660,25 @@ Untitled document
     const pantsMat = new THREE.MeshStandardMaterial({ color:0x2b2b33, roughness:0.7 });
     const shoeMat = new THREE.MeshStandardMaterial({ color:0x151515, roughness:0.6 });
     const hairMat = new THREE.MeshStandardMaterial({ color:0x2a1a12, roughness:0.85 });
+
     const torso = new THREE.Mesh(new THREE.BoxGeometry(0.46,0.6,0.26), shirtMat);
     torso.position.y = 1.14;
     torso.castShadow = true;
     char.add(torso);
+
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.15,14,14), skinMat);
     head.position.y = 1.6;
     head.castShadow = true;
     char.add(head);
+
     const hair = new THREE.Mesh(new THREE.SphereGeometry(0.155,14,14,0,Math.PI*2,0,Math.PI*0.5), hairMat);
     hair.position.y = 1.64;
     char.add(hair);
+
     const armGeo = new THREE.BoxGeometry(0.12,0.48,0.14);
     const legGeo = new THREE.BoxGeometry(0.16,0.52,0.18);
     const shoeGeo = new THREE.BoxGeometry(0.18,0.09,0.25);
+
     const limbs = {};
     [-1,1].forEach(side=>{
       const shoulder = new THREE.Object3D();
@@ -1528,6 +1689,7 @@ Untitled document
       shoulder.add(arm);
       char.add(shoulder);
       limbs[side<0?'armL':'armR'] = shoulder;
+
       const hip = new THREE.Object3D();
       hip.position.set(side*0.13, 0.84, 0);
       const leg = new THREE.Mesh(legGeo, pantsMat);
@@ -1541,15 +1703,18 @@ Untitled document
       char.add(hip);
       limbs[side<0?'legL':'legR'] = hip;
     });
+
     char.userData.limbs = limbs;
     char.userData.shirtMat = shirtMat;
     char.userData.walkPhase = 0;
     char.castShadow = true;
     return char;
   }
+
   const character = buildCharacter();
   character.visible = false;
   scene.add(character);
+
   // ---------- Sound (engine drone + horn), created lazily on the first user gesture ----------
   let audioCtx = null, engineOsc = null, engineGain = null;
   function initAudio(){
@@ -1565,6 +1730,7 @@ Untitled document
       engineOsc.start();
     }catch(e){ /* audio unavailable — game still works fine without it */ }
   }
+
   // 6-speed gearbox simulation for the engine note: RPM (pitch) climbs within a gear, then drops
   // back down at the shift point. Shifts are paced by TIME under acceleration (not raw speed) —
   // a full 1st-through-6th run takes about TOTAL_SHIFT_TIME seconds, like a real car's 0-60 shifts,
@@ -1578,6 +1744,7 @@ Untitled document
   function updateEngineSound(dt, accelKey){
     const absSpeed = Math.abs(speed);
     const t = audioCtx.currentTime;
+
     if(absSpeed < 0.3){
       // stopped/parked — back to 1st, ready to climb through the gears again next time you go
       engineGear = 1;
@@ -1602,10 +1769,12 @@ Untitled document
       // coasting or braking: revs fall off gradually instead of holding at redline
       gearTimer = Math.max(0, gearTimer - dt*0.6);
     }
+
     // RPM climbs toward the shift point through the gear, then resets for the next one
     const within = Math.min(1, gearTimer / PER_GEAR_TIME);
     const targetFreq = 65 + within*165 + (accelKey ? 15 : 0);
     engineOsc.frequency.setTargetAtTime(targetFreq, t, 0.06);
+
     if(t > shiftBlipUntil){
       const throttle = accelKey ? 1 : 0.35;
       const targetGain = 0.02 + Math.min(0.05, absSpeed*0.001) * throttle;
@@ -1617,6 +1786,7 @@ Untitled document
     const ctx = speedGaugeCtx, size = 150, cx = size/2, cy = size/2, r = 62;
     const startAngle = Math.PI*0.72, endAngle = Math.PI*2.28; // sweep, gap at the bottom
     ctx.clearRect(0,0,size,size);
+
     // outer bezel
     ctx.beginPath();
     ctx.arc(cx, cy, r+8, 0, Math.PI*2);
@@ -1625,6 +1795,7 @@ Untitled document
     ctx.strokeStyle = 'rgba(255,255,255,0.4)';
     ctx.lineWidth = 2;
     ctx.stroke();
+
     // tick marks
     const majorTicks = 8;
     for(let i=0;i<=majorTicks;i++){
@@ -1637,6 +1808,7 @@ Untitled document
       ctx.lineWidth = 2.5;
       ctx.stroke();
     }
+
     // needle
     const frac = Math.max(0, Math.min(1, kmh/maxKmh));
     const needleAngle = startAngle + (endAngle-startAngle)*frac;
@@ -1651,6 +1823,7 @@ Untitled document
     ctx.arc(cx, cy, 5, 0, Math.PI*2);
     ctx.fillStyle = '#ddd';
     ctx.fill();
+
     // digital readout in the center
     ctx.fillStyle = '#fff';
     ctx.font = '700 26px Segoe UI, Arial';
@@ -1660,6 +1833,7 @@ Untitled document
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
     ctx.fillText('km/h', cx, cy+46);
   }
+
   // ---------- Drift tire smoke ----------
   let smokeSpawnTimer = 0;
   function spawnDriftSmoke(worldPos){
@@ -1687,6 +1861,7 @@ Untitled document
       p.sprite.material.opacity = 0.6 * (1-f);
     }
   }
+
   let hornNodes = null;
   function startHorn(){
     if(!audioCtx || hornNodes) return;
@@ -1712,12 +1887,14 @@ Untitled document
     o1.stop(stopAt); o2.stop(stopAt); o3.stop(stopAt);
     hornNodes = null;
   }
+
   // ---------- Game State ----------
   let running = false;
   const laneOffsets = [];
   for(let i=0;i<LANE_COUNT;i++){
     laneOffsets.push(-ROAD_WIDTH/2 + LANE_WIDTH*(i+0.5));
   }
+
   // Steering model: heading is the car's yaw, steerAngle is the front-wheel angle (visual + input feel).
   // The actual turn rate is a tuned curve so it feels controllable at every speed, not a raw physics
   // formula — plain bicycle-model math produces wildly excessive spin rates at normal driving speed.
@@ -1732,6 +1909,7 @@ Untitled document
   const TURN_FADE_RANGE = 26;   // how gradually that fade happens
   const ON_ROAD_MARGIN = 1.0;    // how close to the guardrail the car can get before it's stopped by it
   const WHEEL_RADIUS = 0.42;
+
   // GTA-style handbrake drift: normally the car's travel direction snaps to match where it's
   // pointed (full grip). Holding the handbrake loosens that — the car keeps sliding in its old
   // direction while the nose swings faster and further, the classic angled power-slide look.
@@ -1740,23 +1918,28 @@ Untitled document
   const DRIFT_GRIP_RATE = 1.6; // handbrake grip: travel direction lags well behind the nose
   const DRIFT_TURN_MULT = 1.7; // loose rear end turns the nose faster while drifting
   const driftParticles = []; // rear tire smoke puffs while drifting
+
   // virtual on-screen steering wheel (touch/mouse drag) — analog input alongside the keyboard
   let wheelAngle = 0;             // current visual rotation of the on-screen wheel, radians
   const MAX_WHEEL_ROT = Math.PI;  // full lock = 180° of drag rotation each way
   const maxReverseSpeed = 20; // m/s in reverse — real cars are much slower backing up
+
   let cameraMode = 'chase'; // 'chase' or 'bumper'
   let camPos = new THREE.Vector3(0,6,-10);
   let camLook = new THREE.Vector3(0,1.2,12);
+
   let speed = 0;
   const maxSpeed = 62; // m/s approx -> displayed km/h
   const accel = 14;
   const brakeDecel = 26;
   const naturalDecel = 6;
+
   // manual gear selector — a real PRND, not just an inferred D/R label:
   // P locks the car, N free-coasts, D/R actually constrain which direction the accelerator drives
   let manualGear = 'D';
   let virtualAccel = false, virtualBrake = false; // driven by the on-screen pedal buttons
   let virtualHandbrake = false; // driven by the on-screen handbrake button
+
   // GTA-style get in/out of the vehicle
   let controlMode = 'driving'; // 'driving', 'walking', or 'inside'
   let walkHeading = 0;
@@ -1774,6 +1957,7 @@ Untitled document
   const SHIRT_COLORS = [0x2b5fa8, 0xa83232, 0x2e8b57, 0x8a2be2, 0x333333, 0xd4af37];
   let shirtColorIndex = 0;
   const SHIRT_PRICE = 50;
+
   // crime loop: rob the bank or break into houses, cops chase you, get caught and lose the cash
   let cash = 0;
   let wantedLevel = 0;           // 0 = clean, 1+ = cops actively hunting you
@@ -1793,10 +1977,13 @@ Untitled document
   let pendingPoliceCount = 0;    // how many cops to spawn once the delay below elapses
   let policeSpawnDelay = 0;      // counts down once you're back in the car; cops appear at 0
   const POLICE_SPAWN_DELAY_TIME = 5.0; // seconds of grace after getting back in the car
+
   let distance = 0;
   let elapsedDifficulty = 0;
+
   const traffic = [];
   const carColors = [0x2a9df4, 0xffd23f, 0x2ecc71, 0xee6c4d, 0x8e44ad, 0xf5f5f5, 0x111111];
+
   function spawnTraffic(zAhead){
     const lane = Math.floor(Math.random()*LANE_COUNT);
     const color = carColors[Math.floor(Math.random()*carColors.length)];
@@ -1807,6 +1994,7 @@ Untitled document
     scene.add(car);
     traffic.push(car);
   }
+
   // pre-spawn some traffic ahead
   function resetGame(){
     // remove old traffic
@@ -1855,6 +2043,7 @@ Untitled document
       spawnTraffic(30 + i*22 + Math.random()*10);
     }
   }
+
   // ---------- Controls ----------
   const keys = {};
   window.addEventListener('keydown', e=>{
@@ -1862,6 +2051,7 @@ Untitled document
     if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
   });
   window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()] = false; });
+
   let camPressedLatch = false;
   let headlightPressedLatch = false;
   let hornPressedLatch = false;
@@ -1869,6 +2059,7 @@ Untitled document
   let indLeftPressedLatch = false, indRightPressedLatch = false;
   let headlightsOn = true;
   let indicatorState = 0; // -1 right signal on, 0 off, 1 left signal on — toggled manually, like a real stalk
+
   // checked every frame regardless of mode, since 'F' works both to exit and to re-enter
   function checkVehicleToggleKey(){
     const key = keys['f'];
@@ -1906,6 +2097,7 @@ Untitled document
       }
     }
     if(!key) exitPressedLatch = false;
+
     // manual turn signals (Q/E) — click again (or hit the other side) to cancel, like a real stalk
     const qKey = keys['q'];
     if(qKey && !indLeftPressedLatch){
@@ -1913,6 +2105,7 @@ Untitled document
       indicatorState = indicatorState === 1 ? 0 : 1;
     }
     if(!qKey) indLeftPressedLatch = false;
+
     const eKey = keys['e'];
     if(eKey && !indRightPressedLatch){
       indRightPressedLatch = true;
@@ -1920,17 +2113,21 @@ Untitled document
     }
     if(!eKey) indRightPressedLatch = false;
   }
+
   function handleSteering(dt){
     const left = keys['arrowleft'] || keys['a'];
     const right = keys['arrowright'] || keys['d'];
+
     // front wheel angle eases toward the target and self-centers when released.
     // Keyboard is digital (full lock); the virtual wheel gives proportional, analog input.
     let targetSteer = 0;
     if(left) targetSteer = MAX_STEER;
     else if(right) targetSteer = -MAX_STEER;
     else if(Math.abs(wheelAngle) > 0.02) targetSteer = -(wheelAngle / MAX_WHEEL_ROT) * MAX_STEER;
+
     const rate = targetSteer !== 0 ? STEER_RATE : STEER_RETURN;
     steerAngle += (targetSteer - steerAngle) * Math.min(1, rate*dt);
+
     // Turn rate: a designed curve, not raw bicycle-model physics.
     // - ramps up from 0 so you can't spin in place, full authority by TURN_RAMP_SPEED
     // - gently fades out at higher speed so fast turns stay controllable instead of snapping into a spin
@@ -1946,791 +2143,8 @@ Untitled document
     heading += yawRate * dt;
     // wrap into (-PI, PI] so the number stays clean even after many full turns
     heading = ((heading + Math.PI) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI) - Math.PI;
+
     // the car's actual direction of TRAVEL lags behind where it's pointed while drifting —
     // full grip snaps them together almost instantly; the handbrake lets them separate
     const gripRate = handbrakeKey && absSpeed > 4 ? DRIFT_GRIP_RATE : GRIP_RATE;
-    let headingDiff = heading - velocityHeading;
-    headingDiff = ((headingDiff + Math.PI) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI) - Math.PI;
-    velocityHeading += headingDiff * Math.min(1, gripRate*dt);
-    // camera toggle (chase <-> bumper)
-    const camKey = keys['c'];
-    if(camKey && !camPressedLatch){
-      camPressedLatch = true;
-      cameraMode = cameraMode === 'chase' ? 'bumper' : 'chase';
-    }
-    if(!camKey) camPressedLatch = false;
-    // headlight toggle
-    const lightKey = keys['l'];
-    if(lightKey && !headlightPressedLatch){
-      headlightPressedLatch = true;
-      headlightsOn = !headlightsOn;
-    }
-    if(!lightKey) headlightPressedLatch = false;
-    // horn — sustains for as long as it's held, like a real horn button
-    const hornKey = keys['h'];
-    if(hornKey && !hornPressedLatch){
-      hornPressedLatch = true;
-      startHorn();
-    }
-    if(!hornKey && hornPressedLatch){
-      hornPressedLatch = false;
-      stopHorn();
-    }
-  }
-  function isNearBankDoor(){
-    if(!bankDoorObject) return false;
-    const doorPos = new THREE.Vector3();
-    bankDoorObject.getWorldPosition(doorPos);
-    const dx = character.position.x - doorPos.x;
-    const dz = character.position.z - doorPos.z;
-    return Math.sqrt(dx*dx + dz*dz) < BANK_ROB_DISTANCE;
-  }
-  // finds a nearby house that's within range and not still on its post-loot cooldown
-  function findLootableHouse(){
-    const now = performance.now()/1000;
-    const doorPos = new THREE.Vector3();
-    for(const h of houses){
-      if(h.forSale) continue; // that one's for buying, not breaking into
-      h.door.getWorldPosition(doorPos);
-      const dx = character.position.x - doorPos.x;
-      const dz = character.position.z - doorPos.z;
-      if(Math.sqrt(dx*dx + dz*dz) < HOUSE_LOOT_DISTANCE && (now - h.lastLootedAt) > HOUSE_LOOT_COOLDOWN){
-        return h;
-      }
-    }
-    return null;
-  }
-  function findPurchasableHouse(){
-    const markerPos = new THREE.Vector3();
-    for(const h of houses){
-      if(!h.forSale || h.owned || !h.marker) continue;
-      h.marker.getWorldPosition(markerPos);
-      const dx = character.position.x - markerPos.x;
-      const dz = character.position.z - markerPos.z;
-      if(Math.sqrt(dx*dx + dz*dz) < HOUSE_BUY_MARKER_DISTANCE) return h;
-    }
-    return null;
-  }
-  function buyHouse(h){
-    if(cash < h.price) return false;
-    cash -= h.price;
-    h.owned = true;
-    if(h.sign){
-      h.sign.parent.remove(h.sign);
-      h.sign = null;
-    }
-    if(h.marker){
-      h.marker.parent.remove(h.marker);
-      h.marker = null;
-    }
-    const soldSign = makeYardSign('SOLD!\nYou own this', '#a8281f');
-    soldSign.position.set(2.6, 1.1, 4.0);
-    h.door.parent.add(soldSign);
-    return true;
-  }
-  function isNearInteriorExit(){
-    if(!interiorExitPoint) return false;
-    const exitPos = new THREE.Vector3();
-    interiorExitPoint.getWorldPosition(exitPos);
-    const dx = character.position.x - exitPos.x;
-    const dz = character.position.z - exitPos.z;
-    return Math.sqrt(dx*dx + dz*dz) < INTERIOR_EXIT_DISTANCE;
-  }
-  function isNearSofa(){
-    if(!sofaSitPoint) return false;
-    const p = new THREE.Vector3();
-    sofaSitPoint.getWorldPosition(p);
-    const dx = character.position.x - p.x, dz = character.position.z - p.z;
-    return Math.sqrt(dx*dx + dz*dz) < SIT_DISTANCE;
-  }
-  function isNearWardrobe(){
-    if(!wardrobePoint) return false;
-    const p = new THREE.Vector3();
-    wardrobePoint.getWorldPosition(p);
-    const dx = character.position.x - p.x, dz = character.position.z - p.z;
-    return Math.sqrt(dx*dx + dz*dz) < WARDROBE_DISTANCE;
-  }
-  function sitDown(){
-    const p = new THREE.Vector3();
-    sofaSitPoint.getWorldPosition(p);
-    character.position.set(p.x, 0, p.z);
-    walkHeading = Math.PI; // face the TV
-    character.rotation.y = walkHeading;
-    sitting = true;
-    const limbs = character.userData.limbs;
-    // a simple seated pose: legs bent forward, arms relaxed
-    limbs.legL.rotation.x = -1.3; limbs.legR.rotation.x = -1.3;
-    limbs.armL.rotation.x = -0.15; limbs.armR.rotation.x = -0.15;
-    character.position.y -= 0.28; // sink down onto the cushions a little
-  }
-  function standUp(){
-    sitting = false;
-    character.position.y = 0;
-    const limbs = character.userData.limbs;
-    limbs.legL.rotation.x = 0; limbs.legR.rotation.x = 0;
-    limbs.armL.rotation.x = 0; limbs.armR.rotation.x = 0;
-    // step forward off the sofa so pressing F again doesn't immediately re-sit
-    const cosW = Math.cos(walkHeading), sinW = Math.sin(walkHeading);
-    character.position.x -= sinW * 1.0;
-    character.position.z -= cosW * 1.0;
-  }
-  function cycleShirt(){
-    if(cash < SHIRT_PRICE) return;
-    cash -= SHIRT_PRICE;
-    shirtColorIndex = (shirtColorIndex + 1) % SHIRT_COLORS.length;
-    character.userData.shirtMat.color.setHex(SHIRT_COLORS[shirtColorIndex]);
-  }
-  // walking into the green marker pays automatically — no button press needed
-  function updateHousePurchaseMarker(){
-    if(controlMode !== 'walking' || robbing) return;
-    const h = findPurchasableHouse();
-    if(h && cash >= h.price) buyHouse(h);
-  }
-  function findNearbyDealerCar(){
-    const p = new THREE.Vector3();
-    for(const d of dealerCars){
-      d.marker.getWorldPosition(p);
-      const dx = character.position.x - p.x, dz = character.position.z - p.z;
-      if(Math.sqrt(dx*dx + dz*dz) < 2.2) return d;
-    }
-    return null;
-  }
-  function buyDealerCar(d){
-    if(cash < d.price) return false;
-    cash -= d.price;
-    player.userData.bodyMat.color.setHex(d.color);
-    return true;
-  }
-  function findEnterableHouse(){
-    const doorPos = new THREE.Vector3();
-    for(const h of houses){
-      if(!h.owned) continue;
-      h.door.getWorldPosition(doorPos);
-      const dx = character.position.x - doorPos.x;
-      const dz = character.position.z - doorPos.z;
-      if(Math.sqrt(dx*dx + dz*dz) < HOUSE_ENTER_DISTANCE) return h;
-    }
-    return null;
-  }
-  function enterHouse(h){
-    houseCurrentlyInside = h;
-    controlMode = 'inside';
-    character.position.set(INTERIOR_ORIGIN.x, 0, INTERIOR_ORIGIN.z + 2.8);
-    walkHeading = Math.PI; // face into the room
-    character.rotation.y = walkHeading;
-  }
-  function exitHouse(){
-    if(!houseCurrentlyInside) return;
-    sitting = false;
-    const limbs = character.userData.limbs;
-    limbs.legL.rotation.x = 0; limbs.legR.rotation.x = 0;
-    limbs.armL.rotation.x = 0; limbs.armR.rotation.x = 0;
-    const doorPos = new THREE.Vector3();
-    houseCurrentlyInside.door.getWorldPosition(doorPos);
-    controlMode = 'walking';
-    character.position.set(doorPos.x, 0, doorPos.z + 1.3);
-    walkHeading = 0;
-    character.rotation.y = walkHeading;
-    houseCurrentlyInside = null;
-  }
-  function isStillNearRobTarget(){
-    if(robTarget === 'bank') return isNearBankDoor();
-    if(robTarget){
-      const doorPos = new THREE.Vector3();
-      robTarget.door.getWorldPosition(doorPos);
-      const dx = character.position.x - doorPos.x;
-      const dz = character.position.z - doorPos.z;
-      return Math.sqrt(dx*dx + dz*dz) < HOUSE_LOOT_DISTANCE + 1; // a little slack so it doesn't cancel on tiny movement
-    }
-    return false;
-  }
-  // progresses the heist/burglary while the player stays put; cancels if they wander off
-  function updateRobbery(dt){
-    if(!robbing) return;
-    if(!isStillNearRobTarget()){
-      robbing = false;
-      robTimer = 0;
-      robTarget = null;
-      return;
-    }
-    const duration = robTarget === 'bank' ? ROB_DURATION : HOUSE_ROB_DURATION;
-    robTimer += dt;
-    if(robTimer >= duration){
-      robbing = false;
-      robTimer = 0;
-      if(robTarget === 'bank'){
-        cash += ROB_PAYOUT;
-        wantedLevel = Math.min(3, wantedLevel + 1);
-        evadeTimer = 0;
-        pendingPoliceCount = Math.max(pendingPoliceCount, 2 + wantedLevel);
-      } else if(robTarget){
-        robTarget.lastLootedAt = performance.now()/1000;
-        cash += Math.floor(HOUSE_PAYOUT_MIN + Math.random()*(HOUSE_PAYOUT_MAX - HOUSE_PAYOUT_MIN));
-        if(Math.random() < HOUSE_WANTED_CHANCE){
-          wantedLevel = Math.min(3, wantedLevel + 1);
-          evadeTimer = 0;
-          pendingPoliceCount = Math.max(pendingPoliceCount, 1 + wantedLevel);
-        }
-      }
-      robTarget = null;
-    }
-  }
-  // police pursuit AI: reuses the same scrolling-world trick as ambient traffic (their Z moves
-  // relative to the player's speed) but steers toward the player and closes in at a chase speed
-  function updatePolice(dt, moveAmount){
-    if(police.length === 0) return;
-    let anyClose = false;
-    police.forEach(p=>{
-      // steer toward the player's current lane position
-      const dxToPlayer = player.position.x - p.position.x;
-      p.userData.speed += (POLICE_CHASE_SPEED - p.userData.speed) * Math.min(1, dt*0.6);
-      p.position.x += Math.max(-8, Math.min(8, dxToPlayer)) * Math.min(1, dt*1.4);
-      p.position.z -= moveAmount - p.userData.speed*dt;
-      p.position.y = getHeightAt(p.position.z);
-      const aheadX = getRoadCenterXAt(p.position.z + 4) - getRoadCenterXAt(p.position.z - 4);
-      p.rotation.y = Math.atan2(dxToPlayer*0.15 + aheadX, 8);
-      if(p.userData.lightBar){
-        const on = Math.floor(performance.now()/180) % 2 === 0;
-        p.userData.lightBar.red.material.emissiveIntensity = on ? 1.5 : 0.1;
-        p.userData.lightBar.blue.material.emissiveIntensity = on ? 0.1 : 1.5;
-      }
-      const dx = Math.abs(p.position.x - player.position.x);
-      const dz = Math.abs(p.position.z - player.position.z);
-      if(dz < 12 && dx < 6) anyClose = true;
-      if(dz < POLICE_CATCH_DIST_Z && dx < POLICE_CATCH_DIST_X && controlMode === 'driving'){
-        handleBusted();
-      }
-    });
-    evadeTimer = anyClose ? 0 : evadeTimer + dt;
-    if(evadeTimer > EVADE_TIME_TO_CLEAR){
-      wantedLevel = 0;
-      clearPolice();
-    }
-  }
-  function handleBusted(){
-    wantedLevel = 0;
-    clearPolice();
-    pendingPoliceCount = 0;
-    policeSpawnDelay = 0;
-    cash = 0;
-    speed = 0;
-    bustedFlash.style.opacity = '1';
-    setTimeout(()=>{ bustedFlash.style.opacity = '0'; }, 1400);
-  }
-  // ---------- Get in / out of the car (GTA-style) ----------
-  function toggleVehicle(){
-    if(controlMode === 'driving'){
-      // step out beside the driver door
-      const cosH = Math.cos(heading), sinH = Math.sin(heading);
-      const lx = -1.35, lz = 0.2;
-      character.position.set(
-        player.position.x + lx*cosH + lz*sinH,
-        player.position.y,
-        player.position.z - lx*sinH + lz*cosH
-      );
-      walkHeading = heading;
-      character.rotation.y = walkHeading;
-      character.visible = true;
-      controlMode = 'walking';
-      speed = 0;
-      if(engineGain) engineGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.15);
-      // settle the lights into a neutral "parked" state instead of freezing mid-blink/mid-brake
-      player.userData.tailMeshes.forEach(m=> m.material.emissiveIntensity = 0.35);
-      player.userData.reverseMeshes.forEach(m=>{ m.material.emissiveIntensity = 0; m.material.emissive.setHex(0x000000); });
-      [...player.userData.indicatorFront, ...player.userData.indicatorRear].forEach(m=> m.material.emissiveIntensity = 0.1);
-      indicatorState = 0;
-      indLeftBtn.classList.remove('active');
-      indRightBtn.classList.remove('active');
-    } else {
-      const dx = character.position.x - player.position.x;
-      const dz = character.position.z - player.position.z;
-      if(Math.sqrt(dx*dx + dz*dz) < REENTER_DISTANCE){
-        character.visible = false;
-        controlMode = 'driving';
-        if(pendingPoliceCount > 0 && police.length === 0){
-          policeSpawnDelay = POLICE_SPAWN_DELAY_TIME;
-        }
-      }
-    }
-  }
-  // ambient pedestrians stroll back and forth along their stretch of sidewalk, purely cosmetic
-  function updatePedestrians(dt){
-    pedestrians.forEach(p=>{
-      p.phase += dt * p.speed;
-      const offset = Math.sin(p.phase) * p.range;
-      const facing = Math.cos(p.phase) >= 0 ? 1 : -1;
-      p.obj.position.z = p.baseZ + offset;
-      p.obj.rotation.y = facing > 0 ? Math.PI/2 : -Math.PI/2;
-      p.walkPhase += dt * 4;
-      const swing = Math.sin(p.walkPhase) * 0.5;
-      p.limbs.legL.rotation.x = swing;
-      p.limbs.legR.rotation.x = -swing;
-      p.limbs.armL.rotation.x = -swing;
-      p.limbs.armR.rotation.x = swing;
-    });
-  }
-  function handleWalking(dt, now){
-    const left = keys['arrowleft'] || keys['a'];
-    const right = keys['arrowright'] || keys['d'];
-    const fwd = keys['arrowup'] || keys['w'];
-    const back = keys['arrowdown'] || keys['s'];
-    const limbs = character.userData.limbs;
-    if(robbing || sitting){
-      // stand still (robbing at a door, or relaxing on the sofa)
-      if(!sitting){
-        limbs.legL.rotation.x *= 0.8; limbs.legR.rotation.x *= 0.8;
-        limbs.armL.rotation.x *= 0.8; limbs.armR.rotation.x *= 0.8;
-      }
-    } else {
-      if(left) walkHeading += WALK_TURN_RATE*dt;
-      if(right) walkHeading -= WALK_TURN_RATE*dt;
-      let moveSpeed = 0;
-      if(fwd) moveSpeed = RUN_SPEED;
-      else if(back) moveSpeed = -WALK_SPEED;
-      const cosW = Math.cos(walkHeading), sinW = Math.sin(walkHeading);
-      character.position.x += sinW * moveSpeed * dt;
-      character.position.z += cosW * moveSpeed * dt;
-      character.rotation.y = walkHeading;
-      // simple walk-cycle animation: legs/arms swing while actually moving
-      if(moveSpeed !== 0){
-        character.userData.walkPhase += Math.abs(moveSpeed) * dt * 3.2;
-        const swing = Math.sin(character.userData.walkPhase) * 0.55;
-        limbs.legL.rotation.x = swing;
-        limbs.legR.rotation.x = -swing;
-        limbs.armL.rotation.x = -swing;
-        limbs.armR.rotation.x = swing;
-      } else {
-        limbs.legL.rotation.x *= 0.8; limbs.legR.rotation.x *= 0.8;
-        limbs.armL.rotation.x *= 0.8; limbs.armR.rotation.x *= 0.8;
-      }
-    }
-    if(controlMode === 'inside'){
-      // keep the player inside the room instead of walking through walls
-      if(!sitting){
-        const rx = INTERIOR_ORIGIN.x, rz = INTERIOR_ORIGIN.z;
-        character.position.x = Math.max(rx-6.0, Math.min(rx+6.0, character.position.x));
-        character.position.z = Math.max(rz-5.0, Math.min(rz+5.6, character.position.z));
-        character.position.y = 0;
-      }
-      footPrompt.style.display = 'none';
-      robBarWrap.style.display = 'none';
-      if(sitting){
-        bankPrompt.textContent = 'Press F to get up';
-        bankPrompt.style.display = 'block';
-      } else if(isNearSofa()){
-        bankPrompt.textContent = 'Press F to sit down';
-        bankPrompt.style.display = 'block';
-      } else if(isNearWardrobe()){
-        bankPrompt.textContent = cash >= SHIRT_PRICE
-          ? `Press F to change shirt ($${SHIRT_PRICE})`
-          : `Need $${SHIRT_PRICE} to change shirt`;
-        bankPrompt.style.display = 'block';
-      } else if(isNearInteriorExit()){
-        bankPrompt.textContent = 'Press F to leave';
-        bankPrompt.style.display = 'block';
-      } else {
-        bankPrompt.style.display = 'none';
-      }
-      return;
-    }
-    const groundY = getHeightAt(character.position.z);
-    character.position.y += (groundY - character.position.y) * Math.min(1, dt*10);
-    // prompt to get back in when close enough to the car
-    const dx = character.position.x - player.position.x;
-    const dz = character.position.z - player.position.z;
-    footPrompt.style.display = Math.sqrt(dx*dx+dz*dz) < REENTER_DISTANCE ? 'block' : 'none';
-    // prompt / progress bar for buying, robbing the bank, entering your house, or breaking into one
-    const enterable = !robbing ? findEnterableHouse() : null;
-    const nearDealerCar = !robbing ? findNearbyDealerCar() : null;
-    const nearPurchase = !robbing ? findPurchasableHouse() : null;
-    const nearHouse = !robbing ? findLootableHouse() : null;
-    const nearBank = isNearBankDoor();
-    if(robbing){
-      bankPrompt.style.display = 'none';
-    } else if(enterable){
-      bankPrompt.textContent = 'Press F to go inside';
-      bankPrompt.style.display = 'block';
-    } else if(nearDealerCar){
-      bankPrompt.textContent = cash >= nearDealerCar.price
-        ? `Press F to buy this car ($${nearDealerCar.price.toLocaleString()})`
-        : `Need $${nearDealerCar.price.toLocaleString()} to buy (you have $${cash.toLocaleString()})`;
-      bankPrompt.style.display = 'block';
-    } else if(nearPurchase){
-      bankPrompt.textContent = cash >= nearPurchase.price
-        ? 'Walk onto the green circle to buy this house ($' + nearPurchase.price.toLocaleString() + ')'
-        : `Need $${nearPurchase.price.toLocaleString()} to buy (you have $${cash.toLocaleString()})`;
-      bankPrompt.style.display = 'block';
-    } else if(nearHouse){
-      bankPrompt.textContent = 'Press F to break in';
-      bankPrompt.style.display = 'block';
-    } else if(nearBank){
-      bankPrompt.textContent = 'Press F to rob the bank';
-      bankPrompt.style.display = 'block';
-    } else {
-      bankPrompt.style.display = 'none';
-    }
-    robBarWrap.style.display = robbing ? 'block' : 'none';
-    if(robbing){
-      const duration = robTarget === 'bank' ? ROB_DURATION : HOUSE_ROB_DURATION;
-      robBarFill.style.width = Math.min(100, (robTimer/duration)*100) + '%';
-    }
-  }
-  // ---------- Collision ----------
-  let crashCooldown = 0; // seconds left before another crash can register (avoids repeat-hits while overlapping)
-  function checkCollision(){
-    if(crashCooldown > 0) return null;
-    for(const t of traffic){
-      const dz = Math.abs(t.position.z - player.position.z);
-      const dx = Math.abs(t.position.x - player.position.x);
-      if(dz < 3.0 && dx < 1.6){
-        return t;
-      }
-    }
-    return null;
-  }
-  // crashing bumps and slows the car instead of ending the game
-  function handleCrash(hitCar){
-    crashCooldown = 1.0;
-    speed *= -0.3; // knocked backward a bit
-    // nudge sideways away from whatever was hit, so they don't stay locked together
-    const pushDir = player.position.x >= hitCar.position.x ? 1 : -1;
-    player.position.x += pushDir * 1.2;
-    heading *= 0.4; // the impact knocks the car somewhat straighter, like a real jolt
-    crashFlash.style.opacity = '1';
-    setTimeout(()=>{ crashFlash.style.opacity = '0'; }, 220);
-  }
-  // ---------- Animation Loop ----------
-  let lastTime = performance.now();
-  function animate(now){
-    if(!running) return;
-    const dt = Math.min((now-lastTime)/1000, 0.05);
-    lastTime = now;
-    checkVehicleToggleKey();
-    updateDriftSmoke(dt);
-    updateRobbery(dt);
-    updatePedestrians(dt);
-    updateHousePurchaseMarker();
-    // self-centering spring for the virtual wheel when it's not being actively dragged
-    if(!wheelDragging && Math.abs(wheelAngle) > 0.001){
-      wheelAngle += (0 - wheelAngle) * Math.min(1, dt*6);
-      wheelDial.style.transform = `rotate(${wheelAngle}rad)`;
-    }
-    const accelKey = (keys['arrowup'] || keys['w'] || virtualAccel) && controlMode === 'driving';
-    const brakeKey = (keys['arrowdown'] || keys['s'] || virtualBrake) && controlMode === 'driving';
-    if(controlMode === 'driving'){
-      handleSteering(dt);
-      // gear-aware throttle/brake: P locks the car, N free-coasts either way, D/R actually
-      // constrain which direction the pedals drive you — a real gear selector, not just a label.
-      if(manualGear === 'P'){
-        speed = 0;
-      } else if(manualGear === 'N'){
-        if(brakeKey && speed !== 0){
-          const bdrag = Math.sign(speed) * brakeDecel * dt;
-          speed = Math.abs(bdrag) > Math.abs(speed) ? 0 : speed - bdrag;
-        } else if(speed !== 0){
-          const drag = Math.sign(speed) * naturalDecel * dt;
-          speed = Math.abs(drag) > Math.abs(speed) ? 0 : speed - drag;
-        }
-      } else if(manualGear === 'R'){
-        if(accelKey) speed -= accel*dt;
-        else if(brakeKey) speed += brakeDecel*dt;
-        else if(speed !== 0) speed = Math.min(0, speed + naturalDecel*dt);
-        speed = Math.max(-maxReverseSpeed, Math.min(0, speed));
-      } else { // 'D'
-        if(accelKey) speed += accel*dt;
-        else if(brakeKey) speed -= brakeDecel*dt;
-        else if(speed !== 0) speed = Math.max(0, speed - naturalDecel*dt);
-        speed = Math.max(0, Math.min(maxSpeed, speed));
-      }
-      // decompose the car's own speed into forward (world Z) and lateral (world X)
-      // components based on heading, so steering actually curves the car's path.
-      // travel direction (velocityHeading) vs. where the nose points (heading) — these match
-      // under normal grip, but diverge while drifting, which is what makes a drift look like one
-      const forwardComponent = speed * Math.cos(velocityHeading);
-      const lateralComponent = speed * Math.sin(velocityHeading);
-      player.position.x += lateralComponent * dt;
-      // the guardrail is a real barrier, tracked relative to the road's current center and
-      // current width — both drift/widen through a curve or the fork, so you have to actually
-      // steer (and pick a lane) to stay on the road
-      const roadCenterX = getRoadCenterXAt(player.position.z);
-      const halfWidth = getRoadHalfWidthAt(player.position.z) - ON_ROAD_MARGIN;
-      if(player.position.x < roadCenterX - halfWidth) player.position.x = roadCenterX - halfWidth;
-      if(player.position.x > roadCenterX + halfWidth) player.position.x = roadCenterX + halfWidth;
-      player.rotation.y = heading;
-      player.rotation.z = -steerAngle * 0.15; // slight arcade-style body roll into the turn
-      // steer the front wheels and roll all four with travel distance
-      const wheelSpin = (speed*dt) / WHEEL_RADIUS;
-      player.userData.wheelPivots.forEach(w=>{
-        if(w.front) w.pivot.rotation.y = steerAngle;
-        w.spin.rotation.x -= wheelSpin;
-      });
-      // rear tire smoke while actually drifting (nose and travel direction have diverged)
-      let driftDelta = heading - velocityHeading;
-      driftDelta = ((driftDelta + Math.PI) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI) - Math.PI;
-      const isDrifting = Math.abs(driftDelta) > 0.12 && Math.abs(speed) > 4;
-      smokeSpawnTimer -= dt;
-      if(isDrifting && smokeSpawnTimer <= 0){
-        smokeSpawnTimer = 0.045;
-        player.userData.wheelPivots.forEach(w=>{
-          if(!w.front){
-            const wp = new THREE.Vector3();
-            w.pivot.getWorldPosition(wp);
-            spawnDriftSmoke(wp);
-          }
-        });
-      }
-      // move world: player.z stays ~0, move segments & traffic backward relative to travel
-      const moveAmount = forwardComponent*dt;
-      distance = Math.max(0, distance + moveAmount);
-      const WORLD_SPAN = SEGMENT_LENGTH*SEGMENT_COUNT;
-      roadSegments.forEach(seg=>{
-        seg.position.z -= moveAmount;
-        if(seg.position.z < -SEGMENT_LENGTH*1.5){
-          seg.position.z += WORLD_SPAN;
-        } else if(seg.position.z > WORLD_SPAN - SEGMENT_LENGTH*1.5){
-          seg.position.z -= WORLD_SPAN;
-        }
-      });
-      traffic.forEach(t=>{
-        t.position.z -= moveAmount - t.userData.speed*dt; // traffic moves slower relative closing speed
-        t.userData.wheelSpin = ((t.userData.wheelSpin||0) - (t.userData.speed*dt)/WHEEL_RADIUS);
-        if(t.userData.wheelPivots){
-          t.userData.wheelPivots.forEach(w=> w.spin.rotation.x = t.userData.wheelSpin);
-        }
-        if(t.position.z < -30){
-          t.position.z += WORLD_SPAN*0.9 + Math.random()*60;
-          t.userData.lane = Math.floor(Math.random()*LANE_COUNT);
-          t.position.x = laneOffsets[t.userData.lane];
-          t.userData.speed = 10 + Math.random()*10;
-        } else if(t.position.z > WORLD_SPAN + 60){
-          t.position.z -= WORLD_SPAN*0.9 + Math.random()*60;
-          t.userData.lane = Math.floor(Math.random()*LANE_COUNT);
-          t.position.x = laneOffsets[t.userData.lane];
-          t.userData.speed = 10 + Math.random()*10;
-        }
-      });
-      // lift the player and traffic to follow the road surface (bridge humps included) and
-      // keep traffic locked to their lane relative to the road's current (possibly curved) center
-      const groundY = getHeightAt(player.position.z);
-      player.position.y += (groundY - player.position.y) * Math.min(1, dt*10);
-      const pitchAhead = getHeightAt(player.position.z + 3) - getHeightAt(player.position.z - 3);
-      player.rotation.x = Math.atan2(pitchAhead, 6) * -1;
-      traffic.forEach(t=>{
-        t.position.y = getHeightAt(t.position.z);
-        const laneBaseX = laneOffsets[t.userData.lane] + getRoadCenterXAt(t.position.z);
-        t.position.x = laneBaseX;
-        // face along the curve instead of always pointing straight down +Z
-        const centerAhead = getRoadCenterXAt(t.position.z + 4);
-        const centerBehind = getRoadCenterXAt(t.position.z - 4);
-        t.rotation.y = Math.atan2(centerAhead - centerBehind, 8);
-      });
-      if(policeSpawnDelay > 0){
-        policeSpawnDelay -= dt;
-        if(policeSpawnDelay <= 0 && pendingPoliceCount > 0){
-          spawnPolice(pendingPoliceCount);
-          pendingPoliceCount = 0;
-        }
-      }
-      updatePolice(dt, moveAmount);
-      // camera follows the car's heading (rotates with turns), with a chase/bumper toggle
-      const cosH = Math.cos(heading), sinH = Math.sin(heading);
-      const localToWorld = (lx, ly, lz) => new THREE.Vector3(
-        player.position.x + lx*cosH + lz*sinH,
-        player.position.y + ly,
-        player.position.z - lx*sinH + lz*cosH
-      );
-      let desiredPos, desiredLook;
-      if(cameraMode === 'bumper'){
-        desiredPos = localToWorld(0, 1.15, 1.9);
-        desiredLook = localToWorld(0, 1.05, 20);
-      } else {
-        desiredPos = localToWorld(0, 6, -10);
-        desiredLook = localToWorld(0, 1.2, 12);
-      }
-      camPos.lerp(desiredPos, Math.min(1, dt*8));
-      camLook.lerp(desiredLook, Math.min(1, dt*8));
-      camera.position.copy(camPos);
-      camera.lookAt(camLook);
-      if(crashCooldown > 0) crashCooldown -= dt;
-      const hitCar = checkCollision();
-      if(hitCar){
-        handleCrash(hitCar);
-      }
-      // ---- lights ----
-      const blinkOn = Math.floor(now/350) % 2 === 0;
-      player.userData.headlightMeshes.forEach(m=>{ m.material.emissiveIntensity = headlightsOn ? 1.4 : 0.15; });
-      if(player.userData.headSpotlights){
-        player.userData.headSpotlights.forEach(s=> s.intensity = headlightsOn ? 4 : 0);
-      }
-      const braking = brakeKey && speed > 0.1;
-      player.userData.tailMeshes.forEach(m=>{ m.material.emissiveIntensity = braking ? 1.4 : 0.35; });
-      const reversing = speed < -0.1;
-      player.userData.reverseMeshes.forEach(m=>{
-        m.material.emissiveIntensity = reversing ? 1.2 : 0;
-        m.material.emissive.setHex(reversing ? 0xffffff : 0x000000);
-      });
-      const showLeftBlink = indicatorState === 1 && blinkOn;
-      const showRightBlink = indicatorState === -1 && blinkOn;
-      [player.userData.indicatorFront[0], player.userData.indicatorRear[0]].forEach(m=>{
-        m.material.emissiveIntensity = showLeftBlink ? 1.5 : 0.1;
-      });
-      [player.userData.indicatorFront[1], player.userData.indicatorRear[1]].forEach(m=>{
-        m.material.emissiveIntensity = showRightBlink ? 1.5 : 0.1;
-      });
-      indLeftBtn.classList.toggle('active', indicatorState === 1 && blinkOn);
-      indRightBtn.classList.toggle('active', indicatorState === -1 && blinkOn);
-      // ---- engine sound: simulates a real 6-speed gearbox — RPM climbs within a gear,
-      // then drops back down at each shift point instead of just rising forever with speed ----
-      if(engineGain){
-        updateEngineSound(dt, accelKey);
-      }
-      footPrompt.style.display = 'none';
-    } else {
-      // ---- on foot ----
-      handleWalking(dt, now);
-      const cosW = Math.cos(walkHeading), sinW = Math.sin(walkHeading);
-      const localToWorldChar = (lx, ly, lz) => new THREE.Vector3(
-        character.position.x + lx*cosW + lz*sinW,
-        character.position.y + ly,
-        character.position.z - lx*sinW + lz*cosW
-      );
-      const desiredPos = localToWorldChar(0, 2.1, -3.6);
-      const desiredLook = localToWorldChar(0, 1.3, 3);
-      camPos.lerp(desiredPos, Math.min(1, dt*8));
-      camLook.lerp(desiredLook, Math.min(1, dt*8));
-      camera.position.copy(camPos);
-      camera.lookAt(camLook);
-      if(engineGain) engineGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.2);
-    }
-    // traffic signal lights keep cycling regardless of mode (cosmetic)
-    const cyclePos = Math.floor((now/1000) % 6 / 2); // 0,1,2 each ~2s
-    signalHeads.forEach(lights=>{
-      lights.forEach((light, idx)=>{
-        if(idx === cyclePos){
-          light.material.color.setHex(light.userData.color);
-          light.material.emissive.setHex(light.userData.color);
-          light.material.emissiveIntensity = 1.2;
-        } else {
-          light.material.color.setHex(0x330000);
-          light.material.emissive.setHex(0x000000);
-          light.material.emissiveIntensity = 0;
-        }
-      });
-    });
-    // HUD
-    scoreDisplay.textContent = Math.floor(distance) + ' m';
-    cashLine.textContent = '$' + cash.toLocaleString();
-    wantedLine.textContent = wantedLevel > 0 ? '★'.repeat(wantedLevel) : '';
-    if(controlMode === 'driving'){
-      const kmh = Math.floor(Math.abs(speed)*3.2);
-      gearCircle.textContent = manualGear;
-      gearCircle.className = manualGear === 'R' ? 'reverse' : (manualGear === 'P' ? 'park' : (manualGear === 'N' ? 'neutral' : ''));
-      drawSpeedGauge(kmh, maxSpeed*3.2);
-    } else {
-      gearCircle.textContent = 'OUT';
-      gearCircle.className = 'park';
-      drawSpeedGauge(0, maxSpeed*3.2);
-    }
-    renderer.render(scene, camera);
-    requestAnimationFrame(animate);
-  }
-  // ---------- On-screen HUD buttons (mouse + touch) ----------
-  camBtn.addEventListener('click', ()=>{
-    cameraMode = cameraMode === 'chase' ? 'bumper' : 'chase';
-  });
-  lightBtn.addEventListener('click', ()=>{
-    headlightsOn = !headlightsOn;
-    lightBtn.classList.toggle('active', headlightsOn);
-  });
-  exitBtn.addEventListener('click', ()=> toggleVehicle());
-  indLeftBtn.addEventListener('click', ()=>{ indicatorState = indicatorState === 1 ? 0 : 1; });
-  indRightBtn.addEventListener('click', ()=>{ indicatorState = indicatorState === -1 ? 0 : -1; });
-  const hornDown = e=>{ e.preventDefault(); startHorn(); hornBtn.classList.add('active'); };
-  const hornUp = ()=>{ stopHorn(); hornBtn.classList.remove('active'); };
-  hornBtn.addEventListener('mousedown', hornDown);
-  hornBtn.addEventListener('touchstart', hornDown, {passive:false});
-  hornBtn.addEventListener('mouseup', hornUp);
-  hornBtn.addEventListener('mouseleave', hornUp);
-  hornBtn.addEventListener('touchend', hornUp);
-  // pedals (mouse + touch)
-  const pedalDown = (flag, el) => e => { e.preventDefault(); flag.set(true); el.classList.add('active'); };
-  const accelFlag = { set:v=>virtualAccel=v };
-  const brakeFlag = { set:v=>virtualBrake=v };
-  pedalAccel.addEventListener('mousedown', pedalDown(accelFlag, pedalAccel));
-  pedalAccel.addEventListener('touchstart', pedalDown(accelFlag, pedalAccel), {passive:false});
-  pedalAccel.addEventListener('mouseup', ()=>{ virtualAccel=false; pedalAccel.classList.remove('active'); });
-  pedalAccel.addEventListener('mouseleave', ()=>{ virtualAccel=false; pedalAccel.classList.remove('active'); });
-  pedalAccel.addEventListener('touchend', ()=>{ virtualAccel=false; pedalAccel.classList.remove('active'); });
-  pedalBrake.addEventListener('mousedown', pedalDown(brakeFlag, pedalBrake));
-  pedalBrake.addEventListener('touchstart', pedalDown(brakeFlag, pedalBrake), {passive:false});
-  pedalBrake.addEventListener('mouseup', ()=>{ virtualBrake=false; pedalBrake.classList.remove('active'); });
-  pedalBrake.addEventListener('mouseleave', ()=>{ virtualBrake=false; pedalBrake.classList.remove('active'); });
-  pedalBrake.addEventListener('touchend', ()=>{ virtualBrake=false; pedalBrake.classList.remove('active'); });
-  pedalHandbrake.addEventListener('mousedown', pedalDown({set:v=>virtualHandbrake=v}, pedalHandbrake));
-  pedalHandbrake.addEventListener('touchstart', pedalDown({set:v=>virtualHandbrake=v}, pedalHandbrake), {passive:false});
-  pedalHandbrake.addEventListener('mouseup', ()=>{ virtualHandbrake=false; pedalHandbrake.classList.remove('active'); });
-  pedalHandbrake.addEventListener('mouseleave', ()=>{ virtualHandbrake=false; pedalHandbrake.classList.remove('active'); });
-  pedalHandbrake.addEventListener('touchend', ()=>{ virtualHandbrake=false; pedalHandbrake.classList.remove('active'); });
-  // virtual steering wheel (mouse + touch via pointer events)
-  let wheelDragging = false;
-  let wheelPointerId = null;
-  let wheelCenter = { x:0, y:0 };
-  let wheelStartPointerAngle = 0;
-  let wheelStartAngle = 0;
-  const angleFromWheelCenter = (cx, cy) => Math.atan2(cy - wheelCenter.y, cx - wheelCenter.x);
-  wheelDial.addEventListener('pointerdown', e=>{
-    wheelDragging = true;
-    wheelPointerId = e.pointerId;
-    wheelDial.setPointerCapture(e.pointerId);
-    const rect = wheelDial.getBoundingClientRect();
-    wheelCenter = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
-    wheelStartPointerAngle = angleFromWheelCenter(e.clientX, e.clientY);
-    wheelStartAngle = wheelAngle;
-    wheelDial.style.cursor = 'grabbing';
-  });
-  wheelDial.addEventListener('pointermove', e=>{
-    if(!wheelDragging || e.pointerId !== wheelPointerId) return;
-    const currentAngle = angleFromWheelCenter(e.clientX, e.clientY);
-    let delta = currentAngle - wheelStartPointerAngle;
-    while(delta > Math.PI) delta -= Math.PI*2;
-    while(delta < -Math.PI) delta += Math.PI*2;
-    wheelAngle = Math.max(-MAX_WHEEL_ROT, Math.min(MAX_WHEEL_ROT, wheelStartAngle + delta));
-    wheelDial.style.transform = `rotate(${wheelAngle}rad)`;
-  });
-  function endWheelDrag(e){
-    if(wheelPointerId !== null && e.pointerId !== wheelPointerId) return;
-    wheelDragging = false;
-    wheelPointerId = null;
-    wheelDial.style.cursor = 'grab';
-  }
-  wheelDial.addEventListener('pointerup', endWheelDrag);
-  wheelDial.addEventListener('pointercancel', endWheelDrag);
-  // manual gear buttons
-  gearButtonEls.forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      manualGear = btn.dataset.gear;
-      gearButtonEls.forEach(b=> b.classList.toggle('active', b === btn));
-    });
-  });
-  // ---------- Resize ----------
-  window.addEventListener('resize', ()=>{
-    camera.aspect = window.innerWidth/window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-  // ---------- Start ----------
-  startBtn.addEventListener('click', ()=>{
-    overlay.classList.add('hidden');
-    initAudio();
-    resetGame();
-    running = true;
-    lastTime = performance.now();
-    requestAnimationFrame(animate);
-  });
-  // initial static render so it's not blank behind overlay
-  resetGame();
-  renderer.render(scene, camera);
-})();
-</script>
-</body>
-</html>
+    let headingDiff = hea
